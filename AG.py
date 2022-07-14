@@ -1,8 +1,34 @@
 import numpy as np
-import pandas as pd
 
-def f(x,y,z):
-    return 2.3 * x + 5.1 * y + 6.6 *z
+def f(x=0,y=0,z=0):
+    #return 2.3 * x + 5.1 * y + 6.6 *z
+    return (1 - x)**2 + 100 * (y - x**2)**2
+
+def tournament_selection(pop):
+    """Esta función se encarga de realizar la selección 
+    por torneo.
+
+    Args:
+        pop: cantidad de población para limitar el rango superior
+        de los enteros a escoger aleatoriamente.
+
+    Returns:
+        int: 2 enteros escogidos aleatoriamente por torneo
+    """
+
+    #Generamos dos números aleatorios entre el 2 y la población
+    a = [np.random.randint(2,pop-1), np.random.randint(2,pop-1)]
+    #Tomamos el índice del mayor para cambiarlo
+    index_max = a.index(max(a))
+    aux = a[index_max]
+    a[index_max] = np.random.randint(2,pop-1)
+    #Aseguremos que el valor por el que se cambiará sea distinto
+    while aux == a[index_max]:
+        a[index_max] = np.random.randint(2,pop-1)
+    #Aseguremonos de que sean valores distintos
+    while a[0] == a[1]:
+        a[1] =   np.random.randint(2,pop-1) 
+    return a[0], a[1]
 
 def cross_over(a,b,prob_cross=0.9, prob_mut=0.2):
     """Esta función hace cross over en 2 arreglos. Lo hace con una probabilidad
@@ -32,37 +58,11 @@ def cross_over(a,b,prob_cross=0.9, prob_mut=0.2):
             #Haremos la mutación en a o en b    
             Cm = np.random.randint(1,2)
             if Cm == 1:
-                a[Pm] = np.random.uniform(1,10)
+                a[Pm] = np.random.uniform(-2,3)
             if Cm == 2:
-                b[Pm] = np.random.uniform(1,10)
+                b[Pm] = np.random.uniform(-2,3)
     
     return a[0:len(a)-1],b[0:len(b)-1]
-
-def tournament_selection(pop):
-    """Esta función se encarga de realizar la selección 
-    por torneo.
-
-    Args:
-        pop: cantidad de población para limitar el rango superior
-        de los enteros a escoger aleatoriamente.
-
-    Returns:
-        int: 2 enteros escogidos aleatoriamente por torneo
-    """
-
-    #Generamos dos números aleatorios entre el 2 y la población
-    a = [np.random.randint(2,pop-1), np.random.randint(2,pop-1)]
-    #Tomamos el índice del mayor para cambiarlo
-    index_max = a.index(max(a))
-    aux = a[index_max]
-    a[index_max] = np.random.randint(2,pop-1)
-    #Aseguremos que el valor por el que se cambiará sea distinto
-    while aux == a[index_max]:
-        a[index_max] = np.random.randint(2,pop-1)
-    #Aseguremonos de que sean valores distintos
-    while a[0] == a[1]:
-        a[1] =   np.random.randint(2,pop-1) 
-    return a[0], a[1]
 
 def genetic_algorithm(pop, dim, generation, f):
     """Esta función realiza el algoritmo genético.
@@ -90,7 +90,7 @@ def genetic_algorithm(pop, dim, generation, f):
     M_target = np.zeros((pop,1))
     #Evaluamos los números aleatorios para obtener los fitness
     for i in range(pop):
-        M_target[i] = f(M_pop[i][0], M_pop[i][1], M_pop[i][2])
+        M_target[i] = f(M_pop[i][0], M_pop[i][1])
     #Concatenamos las matrices de variables y fitness
     M_ag = np.concatenate((M_pop, M_target), axis=1)
 
@@ -101,8 +101,8 @@ def genetic_algorithm(pop, dim, generation, f):
         #Creamos una matriz temporal
         M_temp = np.zeros((pop,dim))
         #Guardamos los dos primeros valores de M_ag en M_temp
-        M_temp[0] = M_ag[0][0:3]
-        M_temp[1] = M_ag[1][0:3]
+        M_temp[0] = M_ag[0][:dim]
+        M_temp[1] = M_ag[1][:dim]
 
         for AG in range(2,pop-1):
             #Hacemos la selección por torneo
@@ -113,7 +113,7 @@ def genetic_algorithm(pop, dim, generation, f):
             M_temp[AG], M_temp[AG+1] = cross_over(Padre1, Padre2)
         #Evaluamos los nuevos fitness
         for i in range(pop): 
-            M_target[i] = f(M_temp[i][0], M_temp[i][1], M_temp[i][2])
+            M_target[i] = f(M_temp[i][0], M_temp[i][1])
         #Repetimos el proceso de concatenar ero ahora guardamos la matriz temporal
         M_ag = np.concatenate((M_temp, M_target), axis=1)
 
@@ -131,10 +131,10 @@ generation = 100 #Cantidad de iteraciones
 
 #Generamos 100 soluciones y saquemos un promedio
 solution = []
-for i in range(20):
+for i in range(50):
     solution.append(genetic_algorithm(pop, dim, generation, f))
     print(f"Solución {i+1}")
 
 final_solution = sum(solution)/len(solution)
-print("Variables reales:\t X = -9 \t Y = -10 \t Z = -8")
-print(f"Variables estimadas: X = {final_solution[0]} , Y = {final_solution[1]}, Z = {final_solution[2]}")
+print("Variables reales:\t X = 1 \t Y = 1")
+print(f"Variables estimadas: X = {final_solution[0]} , Y = {final_solution[1]}")
