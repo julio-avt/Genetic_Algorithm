@@ -1,4 +1,13 @@
+from matplotlib.pyplot import jet
 import numpy as np
+
+def f_SD(V_m, I_m, M):
+    k = 1.380649E-23
+    q = 1.602E-19
+    T = 306.15
+    expo = np.exp(q * (V_m + M[0] * I_m) / (M[4] * k * T))
+    return I_m - M[2] + M[3] * (expo - 1) + (V_m + M[0] * I_m) / M[1]
+
 
 def tournament_selection(pop):
     """Esta función se encarga de realizar la selección 
@@ -116,10 +125,7 @@ while abs(fitness) >= 1:
 
     #Evaluamos los números aleatorios para obtener los fitness
     for i in range(pop):
-        cociente1 = q * (V_m +  M_pop[i][0] * I_m) / (M_pop[i][4] * k * T)
-        exponencial = np.exp(cociente1)
-        cociente2 =  (V_m +  M_pop[i][0] * I_m) / M_pop[i][1]
-        M_target[i] = M_pop[i][2] - M_pop[i][3] * (exponencial -1) - cociente2
+        M_target[i] = f_SD(V_m, I_m, M_pop[i])
     #Concatenamos las matrices de variables y fitness
     M_ag = np.concatenate((M_pop, M_target), axis=1)
 
@@ -142,12 +148,7 @@ while abs(fitness) >= 1:
             M_temp[AG], M_temp[AG+1] = cross_over(Padre1, Padre2)
         #Evaluamos los nuevos fitness
         for i in range(pop):
-            R_s = M_temp[i][0]
-            n = M_temp[i][4] 
-            cociente1 = q * (V_m +  M_temp[i][0] * I_m) / (M_temp[i][4] * k * T)
-            exponencial = np.exp(cociente1)
-            cociente2 =  (V_m +  M_temp[i][0] * I_m) / M_temp[i][1]
-            M_target[i] = M_temp[i][2] - M_temp[i][3] * (exponencial -1) - cociente2
+            M_target[i] = f_SD(V_m, I_m, M_temp[i])
         #Repetimos el proceso de concatenar ero ahora guardamos la matriz temporal
         M_ag = np.concatenate((M_temp, M_target), axis=1)
 
@@ -156,8 +157,9 @@ while abs(fitness) >= 1:
     #Reordenamos la ultima columna
     M_ag = M_ag[np.argsort(M_ag[:, -1])]
 
-    solution.append(M_ag[0][-1])
-    fitness = sum(solution) / len(solution)
+    #solution.append(M_ag[0][-1])
+    #fitness = sum(solution) / len(solution)
+    fitness = M_ag[0][-1]
     cont+=1
     print("-"*20)
     print(f"Iteracion {cont}: {fitness}")
@@ -165,9 +167,9 @@ while abs(fitness) >= 1:
     
 
 
-print(f"""Fitness: {I_m - M_ag[0][-1]}""")
+print(f"""Fitness: {M_ag[0][-1]}""")
 print(f"I_med = {I_m}")
-print(f"I_est = {M_ag[0][-1]}")
+print(f"I_est = {M_ag[0][-1]} - {I_m} ")
 print(f"R_s = {M_ag[0][0]}")
 print(f"R_sh = {M_ag[0][1]}")
 print(f"I_ph = {M_ag[0][2]}")
